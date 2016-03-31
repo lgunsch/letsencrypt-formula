@@ -34,8 +34,8 @@
                 {{ letsencrypt.cli_install_dir }}/letsencrypt-auto -d "$DOMAIN" certonly || exit 1
                 cat /etc/letsencrypt/live/${DOMAIN}/fullchain.pem \
                     /etc/letsencrypt/live/${DOMAIN}/privkey.pem \
-                    > /etc/letsencrypt/live/${DOMAIN}/privkey-fullchain.pem || exit 1
-                chmod 600 /etc/letsencrypt/live/${DOMAIN}/privkey-fullchain.pem || exit 1
+                    > /etc/letsencrypt/live/${DOMAIN}/fullchain-privkey.pem || exit 1
+                chmod 600 /etc/letsencrypt/live/${DOMAIN}/fullchain-privkey.pem || exit 1
             fi
         done
     - require:
@@ -69,5 +69,19 @@ letsencrypt-crontab-{{ setname }}-{{ domainlist[0] }}:
     - require:
       - cmd: create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}
       - file: /usr/local/bin/renew_letsencrypt_cert.sh
+
+{% for domain in domainlist %}
+
+create-fullchain-privkey-pem-for-{{ domain }}:
+  cmd.run:
+    - name: |
+        cat /etc/letsencrypt/live/{{ domain }}/fullchain.pem \
+            /etc/letsencrypt/live/{{ domain }}/privkey.pem \
+            > /etc/letsencrypt/live/{{ domain }}/fullchain-privkey.pem || exit 1
+    - creates: /etc/letsencrypt/live/{{ domain }}/fullchain-privkey.pem
+    - require:
+      - cmd: create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}
+
+{% endfor %}
 
 {% endfor %}

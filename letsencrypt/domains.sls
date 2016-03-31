@@ -22,6 +22,25 @@
         [ "$REMAINING" -gt "30" ] || exit 1
         echo Domains $@ are in cert and cert is valid for $REMAINING days
 
+/usr/local/bin/renew_letsencrypt_cert.sh:
+  file.managed:
+    - mode: 755
+    - contents: |
+        #!/bin/bash
+        for DOMAIN in "$@"
+        do
+            if ! /usr/local/bin/check_letsencrypt_cert.sh "$DOMAIN" > /dev/null
+            then
+                {{ letsencrypt.cli_install_dir }}/letsencrypt-auto -d "$DOMAIN" certonly || exit 1
+                cat /etc/letsencrypt/live/${DOMAIN}/fullchain.pem \
+                    /etc/letsencrypt/live/${DOMAIN}/privkey.pem \
+                    > /etc/letsencrypt/live/${DOMAIN}/privkey-fullchain.pem || exit 1
+                chmod 600 /etc/letsencrypt/live/${DOMAIN}/privkey-fullchain.pem || exit 1
+            fi
+        done
+    - require:
+      - file: /usr/local/bin/check_letsencrypt_cert.sh
+
 {%
   for setname, domainlist in salt['pillar.get'](
     'letsencrypt:domainsets'
@@ -41,9 +60,7 @@ create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}:
 
 letsencrypt-crontab-{{ setname }}-{{ domainlist[0] }}:
   cron.present:
-    - name: /usr/local/bin/check_letsencrypt_cert.sh {{ domainlist|join(' ') }} > /dev/null ||{{
-          letsencrypt.cli_install_dir
-        }}/letsencrypt-auto -d {{ domainlist|join(' -d ') }} certonly
+    - name: /usr/local/bin/renew_letsencrypt_cert.sh
     - month: '*'
     - minute: random
     - hour: random
@@ -51,5 +68,4 @@ letsencrypt-crontab-{{ setname }}-{{ domainlist[0] }}:
     - identifier: letsencrypt-{{ setname }}-{{ domainlist[0] }}
     - require:
       - cmd: create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}
-
-{% endfor %}
+      - file: /usr/local/bin/renew_letsencrypt_cert.sh

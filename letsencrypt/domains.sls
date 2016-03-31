@@ -69,3 +69,5 @@ letsencrypt-crontab-{{ setname }}-{{ domainlist[0] }}:
     - require:
       - cmd: create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}
       - file: /usr/local/bin/renew_letsencrypt_cert.sh
+
+{% endfor %}

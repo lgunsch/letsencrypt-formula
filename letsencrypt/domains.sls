@@ -77,7 +77,8 @@ create-fullchain-privkey-pem-for-{{ domain }}:
     - name: |
         cat /etc/letsencrypt/live/{{ domain }}/fullchain.pem \
             /etc/letsencrypt/live/{{ domain }}/privkey.pem \
-            > /etc/letsencrypt/live/{{ domain }}/fullchain-privkey.pem || exit 1
+            > /etc/letsencrypt/live/{{ domain }}/fullchain-privkey.pem && \
+        chmod 600 /etc/letsencrypt/live/{{ domain }}/fullchain-privkey.pem
     - creates: /etc/letsencrypt/live/{{ domain }}/fullchain-privkey.pem
     - require:
       - cmd: create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}

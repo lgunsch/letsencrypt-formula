@@ -28,7 +28,7 @@
     - source: salt://files/renew_letsencrypt_cert.sh.jinja
     - mode: 755
     - context:
-      - letsencrypt: {{ letsencrypt }}
+      - letsencrypt: {{ letsencrypt|json() }}
     - require:
       - file: /usr/local/bin/check_letsencrypt_cert.sh
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+{% from "letsencrypt/map.jinja" import letsencrypt with context %}
 for DOMAIN in "$@"
 do
     if ! /usr/local/bin/check_letsencrypt_cert.sh "$DOMAIN" > /dev/null

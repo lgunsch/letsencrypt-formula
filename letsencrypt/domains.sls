@@ -25,7 +25,7 @@
 /usr/local/bin/renew_letsencrypt_cert.sh:
   file.managed:
     - template: jinja
-    - source: salt://files/renew_letsencrypt_cert.sh.jinja
+    - source: salt://letsencrypt/files/renew_letsencrypt_cert.sh.jinja
     - mode: 755
     - require:
       - file: /usr/local/bin/check_letsencrypt_cert.sh
